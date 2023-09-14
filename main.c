@@ -9,62 +9,52 @@
 
 int main() {
     char input[MAX_INPUT_SIZE];
-    char *args[MAX_INPUT_SIZE / 2 + 1];
     int should_run = 1;
-
-    char *token; // Declare token here
-    int arg_count;
+    pid_t pid; /* Move the declaration here */
 
     while (should_run) {
-        printf("Shell > ");
-        fflush(stdout);
+        printf("#cisfun$ "); /* Display the prompt */
+        fflush(stdout); /* Make sure the prompt is displayed */
 
-        // Read user input
+        /* Read user input */
         if (fgets(input, sizeof(input), stdin) == NULL) {
-            break; // Exit on EOF (Ctrl+D)
+            break; /* Exit on Ctrl+D */
         }
 
-        // Tokenize the input
-        token = strtok(input, " \n");
-        arg_count = 0;
+        /* Remove trailing newline */
+        input[strcspn(input, "\n")] = '\0';
 
-        while (token != NULL) {
-            args[arg_count] = token;
-            arg_count++;
-            token = strtok(NULL, " \n");
-        }
-
-        args[arg_count] = NULL;
-
-        // Check for exit command
-        if (strcmp(args[0], "exit") == 0) {
+        /* Check for the "exit" command */
+        if (strcmp(input, "exit") == 0) {
             should_run = 0;
-            printf("Exiting the shell...\n");
-        } else {
-            // Fork a new process
-            pid_t pid = fork();
+            continue; /* Skip the fork/exec process */
+        }
 
-            if (pid < 0) {
-                perror("Fork failed");
-            } else if (pid == 0) {
-                // Child process
-                if (execvp(args[0], args) == -1) {
-                    perror("Execution failed");
-                    exit(EXIT_FAILURE);  // Exit the child process on failure
+        /* Fork a new process */
+        pid = fork();
+
+        if (pid < 0) {
+            perror("Fork failed");
+        } else if (pid == 0) {
+            /* Child process */
+            if (execlp(input, input, NULL) == -1) {
+                perror("Execution failed");
+                exit(EXIT_FAILURE);
+            }
+        } else {
+            /* Parent process */
+            int status;
+            waitpid(pid, &status, 0);
+            if (WIFEXITED(status)) {
+                if (WEXITSTATUS(status) != 0) {
+                    printf("Command exited with non-zero status %d\n", WEXITSTATUS(status));
                 }
             } else {
-                // Parent process
-                int status;
-                waitpid(pid, &status, 0);
-
-                if (WIFEXITED(status)) {
-                    printf("Child process exited with status %d\n", WEXITSTATUS(status));
-                } else {
-                    printf("Child process terminated abnormally\n");
-                }
+                printf("Command terminated abnormally\n");
             }
         }
     }
 
     return 0;
 }
+
