@@ -1,4 +1,6 @@
 #include "main.h"
+#include <stdlib.h>
+
 
 /**
  * read_file - Reads the content of a file and returns it as a string.

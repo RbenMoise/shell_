@@ -1,4 +1,6 @@
 #include "main.h"
+#include <stdlib.h>
+
 
 /**
  * display_prompt - Displays the shell prompt.
@@ -22,7 +24,7 @@ char *read_input(void)
     {
         if (feof(stdin))
         {
-            printf("\n");  // Handle Ctrl+D (EOF) gracefully
+            printf("\n");  /* Handle Ctrl+D (EOF) gracefully*/
             exit(EXIT_SUCCESS);
         }
         else

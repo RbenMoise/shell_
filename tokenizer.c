@@ -1,5 +1,6 @@
 #include "main.h"
-
+#include <stdlib.h>
+#include <string.h>
 /**
  * tokenizer - Tokenizes a string into an array of tokens.
  * @str: The string to tokenize.

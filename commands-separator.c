@@ -1,4 +1,6 @@
 #include "main.h"
+#include  <stdlib.h>
+
 
 /**
  * split_commands - Splits a line into multiple commands using the ';' delimiter.
@@ -30,8 +32,8 @@ void process_commands(char *commands[], int num_commands)
 {
     for (int i = 0; i < num_commands; i++)
     {
-        // Process each command, e.g., by passing it to your command execution logic.
-        // You can use the execute_command function or your own logic here.
+        /* Process each command, e.g., by passing it to your command execution logic.
+        // You can use the execute_command function or your own logic here.*/
         execute_command(commands[i]);
     }
 }
