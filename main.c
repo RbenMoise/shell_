@@ -1,98 +1,63 @@
 #include "main.h"
 
-/**
- * main - Entry point for the simple shell program
- *
- * Return: Always 0
- */
 int main(void)
 {
-    char input[MAX_INPUT_SIZE];
-    int should_run = 1;
+    char *command;
+    size_t len = 0;
+    ssize_t read;
 
-    while (should_run)
+    while (1)
     {
-        printf("Shell > ");
-        fflush(stdout);
+        printf("$ ");
+        read = getline(&command, &len, stdin);
 
-        /* Read user input */
-        if (fgets(input, sizeof(input), stdin) == NULL)
+        if (read == -1)
         {
-            break; /* Exit on EOF (Ctrl+D) */
+            if (isatty(STDIN_FILENO))
+                printf("\n");
+            break;
         }
 
-        /* Remove trailing newline */
-        input[strcspn(input, "\n")] = '\0';
+        if (read > 1)
+        {
+            /* Remove the newline character from the end of the command*/
+            if (command[read - 1] == '\n')
+                command[read - 1] = '\0';
 
-        /* Check for exit command */
-        if (strcmp(input, "exit") == 0)
-        {
-            should_run = 0;
-            printf("Exiting the shell...\n");
-        }
-        else
-        {
-            /* Execute the command */
-            executeCommand(input);
+            /* Execute the command*/
+            execute_command(command);
         }
     }
 
+    free(command);
     return (0);
 }
 
-/**
- * executeCommand - Tokenizes and executes a command with arguments
- * @input: The user input containing the command and optional arguments
- */
-void executeCommand(char *input)
+void execute_command(char *command)
 {
-    char *args[MAX_INPUT_SIZE / 2 + 1];
-    int arg_count = 0;
-    char *token;
+    pid_t child_pid;
+    int status;
 
-    /* Tokenize the input */
-    token = strtok(input, " \n");
-    while (token != NULL)
+    child_pid = fork();
+    if (child_pid == -1)
     {
-        args[arg_count] = token;
-        arg_count++;
-        token = strtok(NULL, " \n");
+        perror("Fork error");
+        return;
     }
-    args[arg_count] = NULL;
 
-    /* Fork a new process */
-    pid_t pid = fork();
-
-    if (pid < 0)
+    if (child_pid == 0)
     {
-        perror("Fork failed");
-    }
-    else if (pid == 0)
-    {
-        /* Child process */
-        if (execvp(args[0], args) == -1)
+        /* This code is executed by the child process*/
+        if (execve(command, NULL, NULL) == -1)
         {
-            perror("Execution failed");
+            perror("Command execution error");
             exit(EXIT_FAILURE);
         }
     }
     else
     {
-        /* Parent process */
-        int status;
-        waitpid(pid, &status, 0);
-
-        if (WIFEXITED(status))
-        {
-            if (WEXITSTATUS(status) != 0)
-            {
-                printf("Command exited with non-zero status %d\n", WEXITSTATUS(status));
-            }
-        }
-        else
-        {
-            printf("Command terminated abnormally\n");
-        }
+        /* This code is executed by the parent process*/
+        waitpid(child_pid, &status, 0);
     }
 }
 
